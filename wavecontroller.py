@@ -39,19 +39,24 @@ def get_data(wavefile):
     return data
 
 
-def get_smoothed_data(wavefile):
-    wf = wave.open(wavefile, "r")
+def smoothing(data, roughness):
+    pre_amp = np.mean(abs(data))
     
-    buf = wf.readframes(wf.getnframes())
-    data = np.frombuffer(buf, dtype="int16")
-
-    kernel = np.ones(50)/50
-    for _ in range(10):
+    kernel = np.ones(roughness)/roughness
+    data = np.convolve(data, kernel, mode="same")
+    
+    kernel = np.ones(4)/4
+    for _ in range(100):
         data = np.convolve(data, kernel, mode="same")
 
-    wf.close()
-
+    amp = np.mean(abs(data))
+    data *= pre_amp/amp/2
+    
     return data.astype(np.int16)
+
+
+def clipping(wavefile):
+    pass
 
 
 def save_file(wavefile, data):
@@ -66,4 +71,4 @@ def save_file(wavefile, data):
                   "NONE", "not compressed" # no compression
                   ))
     wf.writeframes(array.array("h", data).tostring())
-    wf.close()    
+    wf.close()
