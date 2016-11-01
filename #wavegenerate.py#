@@ -1,0 +1,35 @@
+#!/Users/suwakyouhei/.pyenv/shims/python
+# -*- coding: utf-8 -*-
+
+import wavecontroller
+import numpy as np
+
+SAMPLE_FREQ = 44100
+
+
+def pitch2freq(pitch_data):
+    return np.array(map(lambda n:SAMPLE_FREQ/n, pitch_data))
+
+
+def sin_wave(freq_data):    
+    results = []
+    
+    # [-1.0, 1.0]の小数値が入った波を作成
+    for i,f0 in enumerate(freq_data):
+        signal = np.sin(2 * np.pi * f0 * i / SAMPLE_FREQ)
+        # 振幅が大きい時はクリッピング
+        if signal > 1.0:  signal = 1.0
+        if signal < -1.0: signal = -1.0
+        results.append(signal)
+        
+    # [-32768, 32767]の整数値に変換
+    results = np.array(map(lambda n:int(n * 32767.0), results))
+
+    return results
+
+
+if __name__ == "__main__" :
+    
+    for f in freqList:
+        data = sin_wave(1.0, f, 8000.0, 1.0)
+        play(data, 8000, 16)

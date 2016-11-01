@@ -10,7 +10,7 @@ import array
 
 def show_image(data):
     plt.figure(figsize=(18,4))
-    plt.plot(np.arange(0, 1000), data[:1000])
+    plt.plot(data)
     plt.show()
     
 
@@ -59,14 +59,14 @@ def clipping(wavefile):
     pass
 
 
-def save_file(wavefile, data):
+def save_file(wavefile, data, fs):
     if os.path.exists(wavefile):
         os.remove(wavefile)
     
     wf = wave.Wave_write(wavefile)
     wf.setparams((2,                       # channel
                   2,                       # byte width
-                  44100,                   # sampling rate
+                  fs,                      # sampling rate
                   len(data),               # number of frames
                   "NONE", "not compressed" # no compression
                   ))
