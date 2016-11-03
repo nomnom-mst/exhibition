@@ -5,7 +5,7 @@ import numpy as np
 import bufconv
 
 
-ZERO_LENGTH_THRESH = 200
+ZERO_LENGTH_THRESH = 100
 
 
 def smoothing(data):
@@ -36,11 +36,14 @@ def split(data):
             arrs.append(arr[:])
             del arr[:]
     else:
-        if not zero_idxs[i] == zero_idxs[i-1]+1:
+        try:
+            if not zero_idxs[i] == zero_idxs[i-1]+1:
+                arrs.append(arr[:])
+                del arr[:]
+            arr.append(zero_idxs[-1])
             arrs.append(arr[:])
-            del arr[:]
-        arr.append(zero_idxs[i])
-        arrs.append(arr[:])
+        except UnboundLocalError:
+            pass
     arrs = np.array(arrs)
     
     interval_idxs = filter(lambda n:len(n)>ZERO_LENGTH_THRESH, arrs)
@@ -53,7 +56,6 @@ def split(data):
                                    np.where(data[:split_idxs[0]]==0)[0]))
         for i in np.arange(len(split_idxs[1:-1])/2):
             n = 2*i + 1
-            data_list.append(data[split_idxs[n]:split_idxs[n+1]])
             data_list.append(np.delete(data[split_idxs[n]:split_idxs[n+1]],
                                        np.where(data[split_idxs[n]:split_idxs[n+1]]==0)[0]))
         else:
