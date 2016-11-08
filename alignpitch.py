@@ -27,6 +27,26 @@ def smoothing(data):
 
 
 def split(data):
+    remove_idxs = []
+    
+    ## trim
+    start_idx = 0
+    for value in data:
+        start_idx += 1
+        if not value==0:
+            break
+        
+    end_idx = len(data)
+    for value in data[::-1]:
+        if not value==0:
+            break
+        end_idx -= 1
+
+    remove_idxs = np.append(remove_idxs, np.arange(start_idx))
+    remove_idxs = np.append(remove_idxs, np.arange(end_idx, len(data)))
+    data = data[start_idx:end_idx]
+    
+    ## split
     zero_idxs = np.where(data==0)[0]
     arrs = []
     arr = []
@@ -49,40 +69,26 @@ def split(data):
     interval_idxs = filter(lambda n:len(n)>ZERO_LENGTH_THRESH, arrs)
     interval_length = map(lambda n:len(n), interval_idxs)
     split_idxs = np.array(np.array(map(lambda n:[n[0],n[-1]+1], interval_idxs)).flat)
-    
+
     data_list = []
     if not len(split_idxs)==0:
         data_list.append(np.delete(data[:split_idxs[0]],
                                    np.where(data[:split_idxs[0]]==0)[0]))
+        remove_idxs = np.append(remove_idxs, np.where(data[:split_idxs[0]]==0)[0] + start_idx)
+        
         for i in np.arange(len(split_idxs[1:-1])/2):
             n = 2*i + 1
             data_list.append(np.delete(data[split_idxs[n]:split_idxs[n+1]],
                                        np.where(data[split_idxs[n]:split_idxs[n+1]]==0)[0]))
+            remove_idxs = np.append(remove_idxs, np.where(data[split_idxs[n]:split_idxs[n+1]]==0)[0] + start_idx)
         else:
             data_list.append(np.delete(data[split_idxs[-1]:],
                                        np.where(data[split_idxs[-1]:]==0)[0]))
+            remove_idxs = np.append(remove_idxs, np.where(data[split_idxs[-1]:]==0)[0] + start_idx)
     else:
         data_list.append(data)
 
-    return data_list, interval_length
-
-
-def trim(data):
-    start_idx = 0
-    for value in data:
-        start_idx += 1
-        if not value==0:
-            break
-        
-    end_idx = len(data)
-    for value in data[::-1]:
-        if not value==0:
-            break
-        end_idx -= 1
-
-    data = data[start_idx:end_idx]
-
-    return data
+    return data_list, interval_length, remove_idxs
 
 
 def merge_pitch_file(filenames):
@@ -110,12 +116,9 @@ def merge_pitch_file(filenames):
 
         merged_data.append(value)
     merged_data = np.array(merged_data)
-            
-    ## trim
-    merged_data = trim(merged_data)
 
-    ## split(To remove 0)
-    data_list, interval = split(merged_data)
+    ## split(To trim and remove 0)
+    data_list, interval, remove_idxs = split(merged_data)
 
     ## smoothing
     data_list = np.array(map(lambda n:smoothing(n), data_list))
@@ -127,4 +130,4 @@ def merge_pitch_file(filenames):
             zeros = np.zeros(interval[i])
             merged_data = np.append(merged_data, zeros)
     
-    return merged_data
+    return merged_data, remove_idxs

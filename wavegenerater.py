@@ -5,7 +5,6 @@ import wavecontroller
 import numpy as np
 
 SAMPLE_FREQ = 44100
-PITCH_FRAME = 80
 REDUCTION = 3
 EMPH_FREQ = 1.4
 
@@ -14,7 +13,7 @@ def pitch2freq(pitch_data):
     return np.array(map(lambda n:SAMPLE_FREQ/n if not n==0 else 0, pitch_data))
 
 
-def sin_wave(freq_data):
+def sin_wave(freq_data, amps, frame):
     results = []
     prev_offset = 0
     offset = 0
@@ -28,16 +27,16 @@ def sin_wave(freq_data):
     for i,f0 in enumerate(freq_data):
         if i%REDUCTION!=0:
             continue
-        
-        t = float(i*PITCH_FRAME) / SAMPLE_FREQ
+
+        t = float(i*frame) / SAMPLE_FREQ
         prev_phase = (2 * np.pi * prev_f0 * t + prev_offset)%(2 * np.pi)
         phase = (2 * np.pi * f0 * t)%(2 * np.pi)
         offset = prev_phase - phase
         
-        for j in np.arange(PITCH_FRAME*REDUCTION):
-            t = float(i*PITCH_FRAME + j) / SAMPLE_FREQ
+        for j in np.arange(frame*REDUCTION):
+            t = float(i*frame + j) / SAMPLE_FREQ
             theta = 2 * np.pi * f0 * t + offset
-            signal = np.sin(theta)
+            signal = amps[i*frame] * np.sin(theta)
             # 振幅が大きい時はクリッピング
             if signal > 1.0:  signal = 1.0
             if signal < -1.0: signal = -1.0

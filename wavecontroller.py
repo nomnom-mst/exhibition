@@ -4,6 +4,7 @@
 import os
 import wave
 import numpy as np
+from scipy import signal
 import matplotlib.pyplot as plt
 import array
 
@@ -55,8 +56,25 @@ def smoothing(data, roughness):
     return data.astype(np.int16)
 
 
-def clipping(wavefile):
-    pass
+def calc_amp(data):
+    emph_amp = 0.7
+    local_width = 1000
+    
+    idxs = np.arange(0, len(data))
+    data = abs(data)
+
+    # extend array to decide local maxima/minimum
+    idxs_with_offset = idxs + local_width
+    data_extend = np.r_[[data[0]] * local_width, data]
+
+    amps = []
+
+    for i in idxs_with_offset:
+        amps.append(np.max(data_extend[i - local_width: i + 1]))
+
+    amps = (1 - emph_amp) + emph_amp * (amps[:-local_width] / np.max(amps).astype(float))
+    
+    return amps
 
 
 def save_file(wavefile, data, fs):
