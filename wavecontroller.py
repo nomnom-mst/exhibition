@@ -57,7 +57,7 @@ def smoothing(data, roughness):
 
 
 def calc_amp(data):
-    emph_amp = 0.7
+    emph_amp = 0.6
     local_width = 1000
     
     idxs = np.arange(0, len(data))
