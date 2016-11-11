@@ -86,7 +86,8 @@ def split(data):
                                        np.where(data[split_idxs[-1]:]==0)[0]))
             remove_idxs = np.append(remove_idxs, np.where(data[split_idxs[-1]:]==0)[0] + start_idx)
     else:
-        data_list.append(data)
+        data_list.append(np.delete(data, np.where(data==0)[0]))
+        remove_idxs = np.append(remove_idxs, np.where(data==0)[0] + start_idx)
 
     return data_list, interval_length, remove_idxs
 
