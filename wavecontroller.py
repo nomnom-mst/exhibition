@@ -57,7 +57,6 @@ def smoothing(data, roughness):
 
 
 def calc_amp(data):
-    emph_amp = 0.9
     local_width = 1000
     
     idxs = np.arange(0, len(data))
@@ -72,7 +71,7 @@ def calc_amp(data):
     for i in idxs_with_offset:
         amps.append(np.max(data_extend[i - local_width: i + 1]))
 
-    amps = (1 - emph_amp) + emph_amp * (amps[:-local_width] / np.max(amps).astype(float))
+    amps = amps[:-local_width] / np.max(amps).astype(float)
     
     return amps
 
