@@ -50,7 +50,7 @@ def split(data):
     zero_idxs = np.where(data==0)[0]
     arrs = []
     arr = []
-    for i in np.arange(len(zero_idxs[1:])):
+    for i in np.arange(1, len(zero_idxs[1:])):
         arr.append(zero_idxs[i-1])
         if not zero_idxs[i] == zero_idxs[i-1]+1:
             arrs.append(arr[:])
@@ -65,31 +65,43 @@ def split(data):
         except UnboundLocalError:
             pass
     arrs = np.array(arrs)
+
+    interval_idxs_list = filter(lambda n:len(n)>ZERO_LENGTH_THRESH, arrs)
+    complement_idxs_list = filter(lambda n:len(n)<=ZERO_LENGTH_THRESH, arrs)
     
-    interval_idxs = filter(lambda n:len(n)>ZERO_LENGTH_THRESH, arrs)
-    interval_length = map(lambda n:len(n), interval_idxs)
-    split_idxs = np.array(np.array(map(lambda n:[n[0],n[-1]+1], interval_idxs)).flat)
+    interval_length = map(lambda n:len(n), interval_idxs_list)
+    split_idxs = np.array(np.array(map(lambda n:[n[0],n[-1]+1], interval_idxs_list)).flat)
 
     data_list = []
     if not len(split_idxs)==0:
-        data_list.append(np.delete(data[:split_idxs[0]],
-                                   np.where(data[:split_idxs[0]]==0)[0]))
-        remove_idxs = np.append(remove_idxs, np.where(data[:split_idxs[0]]==0)[0] + start_idx)
+        complement_idxs = np.array(filter(lambda n: n[0]<split_idxs[0], complement_idxs_list))
+        data[:split_idxs[0]] = complement_data(data[:split_idxs[0]], complement_idxs)
+        data_list.append(data[:split_idxs[0]])
         
         for i in np.arange(len(split_idxs[1:-1])/2):
-            n = 2*i + 1
-            data_list.append(np.delete(data[split_idxs[n]:split_idxs[n+1]],
-                                       np.where(data[split_idxs[n]:split_idxs[n+1]]==0)[0]))
-            remove_idxs = np.append(remove_idxs, np.where(data[split_idxs[n]:split_idxs[n+1]]==0)[0] + start_idx)
+            m = 2*i + 1
+            complement_idxs = np.array(filter(lambda n:(n[0]<split_idxs[m+1]) and (n[0]>=split_idxs[m]), complement_idxs_list))
+            data[split_idxs[m]:split_idxs[m+1]] = complement_data(data[split_idxs[m]:split_idxs[m+1]], complement_idxs, split_idxs[m])
+            data_list.append(data[split_idxs[m]:split_idxs[m+1]])
         else:
-            data_list.append(np.delete(data[split_idxs[-1]:],
-                                       np.where(data[split_idxs[-1]:]==0)[0]))
-            remove_idxs = np.append(remove_idxs, np.where(data[split_idxs[-1]:]==0)[0] + start_idx)
+            complement_idxs = np.array(filter(lambda n: n[0]>=split_idxs[-1], complement_idxs_list))
+            data[split_idxs[-1]:] = complement_data(data[split_idxs[-1]:], complement_idxs, split_idxs[-1])
+            data_list.append(data[split_idxs[-1]:])
     else:
-        data_list.append(np.delete(data, np.where(data==0)[0]))
-        remove_idxs = np.append(remove_idxs, np.where(data==0)[0] + start_idx)
+        data = complement_data(data, complement_idxs_list)
+        data_list.append(data)
 
     return data_list, interval_length, remove_idxs
+
+
+def complement_data(data, complement_idxs, offset=0):
+    for idxs in complement_idxs:
+        if len(idxs)==0:
+            continue
+        idxs = np.array(idxs) - offset
+        data[idxs] = np.linspace(data[idxs[0]-1], data[idxs[-1]+1], len(idxs))
+
+    return data
 
 
 def merge_pitch_file(filenames):

@@ -18,7 +18,7 @@ class generator:
 
 
     def make_waves(self, wave, freq_data, amps, frame):
-        EMPH_AMP = 0.9
+        EMPH_AMP = 0.6
         results = []
         data_list = []
         prev_offset = 0
@@ -59,7 +59,7 @@ class generator:
         results = self.crossfade(data_list, overlap)
         
         # 最後無音挿入
-        fade_count = 1000
+        fade_count = 2000
         results = np.append(results, np.arange(fade_count)[::-1]*results[-1]/fade_count)
     
         # [-32768, 32767]の整数値に変換
@@ -110,7 +110,7 @@ class generator:
         results = self.crossfade(data_list, overlap)
         
         # 最後無音挿入
-        fade_count = 1000
+        fade_count = 2000
         results = np.append(results, np.arange(fade_count)[::-1]*results[-1]/fade_count)
     
         # [-32768, 32767]の整数値に変換
